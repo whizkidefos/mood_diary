@@ -3,6 +3,9 @@ import 'games/memory_game.dart';
 import 'games/color_patterns.dart';
 import 'exercise_details.dart';
 import 'journal_entry.dart';
+import 'music_player.dart'; // Add this import statement
+import 'meditation_details.dart'; // Add this import statement
+import 'art_therapy.dart'; // Add this import statement
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
@@ -18,6 +21,55 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   final int _breathTarget = 4;
 
   final List<Map<String, dynamic>> _categories = [
+    {
+      'icon': Icons.sports_handball,
+      'label': 'Exercise',
+      'color': Colors.orange,
+      'description': 'Physical activities to boost your mood and energy',
+      'tip': 'Start with small, achievable goals',
+    },
+    {
+      'icon': Icons.self_improvement,
+      'label': 'Breathing',
+      'color': Colors.blue,
+      'description': 'Breathing exercises for stress relief',
+      'tip': 'Take deep breaths throughout the day',
+    },
+    {
+      'icon': Icons.edit_note,
+      'label': 'Journal',
+      'color': Colors.purple,
+      'description': 'Express your thoughts and feelings',
+      'tip': 'Write freely without judgment',
+    },
+    {
+      'icon': Icons.games,
+      'label': 'Games',
+      'color': Colors.green,
+      'description': 'Fun activities to keep your mind engaged',
+      'tip': 'Take breaks between activities',
+    },
+    {
+      'icon': Icons.self_improvement,
+      'label': 'Meditation',
+      'color': Colors.deepPurple,
+      'description': 'Guided sessions for inner peace',
+      'tip': 'Find a quiet space to practice',
+    },
+    {
+      'icon': Icons.palette,
+      'label': 'Art Therapy',
+      'color': Colors.pink,
+      'description': 'Express yourself through creativity',
+      'tip': 'Focus on the process, not the result',
+    },
+    {
+      'icon': Icons.music_note,
+      'label': 'Music',
+      'color': Colors.teal,
+      'description': 'Calming sounds and melodies',
+      'tip': 'Use headphones for best experience',
+    },
     {
       'icon': Icons.sports_handball,
       'label': 'Exercise',
@@ -182,33 +234,68 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     _runBreathingCycle();
   }
 
-  Widget _buildExerciseContent() {
-    return ListView.builder(
-      itemCount: _exercises.length,
-      padding: const EdgeInsets.all(16),
-      itemBuilder: (context, index) {
-        final exercise = _exercises[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _categories[0]['color'],
-              child: Icon(exercise['icon'], color: Colors.white),
+  Widget _buildCategoryHeader(String title, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
             ),
-            title: Text(exercise['title']),
-            subtitle: Text(exercise['description']),
-            trailing: Text(exercise['duration']),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ExerciseDetails(exercise: exercise),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCategoryHeader('Daily Exercises', _categories[0]['color']),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _exercises.length,
+            padding: const EdgeInsets.all(16),
+            itemBuilder: (context, index) {
+              final exercise = _exercises[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: _categories[0]['color'],
+                    child: Icon(exercise['icon'], color: Colors.white),
+                  ),
+                  title: Text(exercise['title']),
+                  subtitle: Text(exercise['description']),
+                  trailing: Text(exercise['duration']),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ExerciseDetails(exercise: exercise),
+                      ),
+                    );
+                  },
                 ),
               );
             },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -403,9 +490,14 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             title: Text(meditation['title']),
             subtitle: Text(meditation['description']),
             trailing: Text(meditation['duration']),
-            onTap: () {
-              // TODO: Implement meditation details screen
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MeditationDetails(
+                  meditation: meditation,
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -427,9 +519,14 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
             title: Text(art['title']),
             subtitle: Text(art['description']),
-            onTap: () {
-              // TODO: Implement art therapy activity screen
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ArtTherapy(
+                  activity: art,
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -452,9 +549,14 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             title: Text(music['title']),
             subtitle: Text(music['description']),
             trailing: Text(music['duration']),
-            onTap: () {
-              // TODO: Implement music player screen
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MusicPlayer(
+                  track: music,
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -464,63 +566,144 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Activities'),
-      ),
       body: Column(
         children: [
-          SizedBox(
-            height: 110,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final category = _categories[index];
-                final isSelected = _selectedCategory == index;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Column(
-                    children: [
-                      InkWell(
-                        onTap: () => setState(() => _selectedCategory = index),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? category['color']
-                                : category['color'].withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            category['icon'],
-                            color:
-                                isSelected ? Colors.white : category['color'],
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 70,
-                        child: Text(
-                          category['label'],
-                          style: TextStyle(
-                            color: isSelected ? category['color'] : null,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                );
-              },
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Activities',
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        final isSelected = _selectedCategory == index;
+                        return GestureDetector(
+                          onTap: () =>
+                              setState(() => _selectedCategory = index),
+                          child: Container(
+                            width: 80,
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? category['color']
+                                        : category['color'].withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    category['icon'],
+                                    color: isSelected
+                                        ? Colors.white
+                                        : category['color'],
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  category['label'],
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? category['color']
+                                        : Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  if (_selectedCategory >= 0)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _categories[_selectedCategory]['description'],
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.lightbulb_outline,
+                                size: 16,
+                                color: _categories[_selectedCategory]['color'],
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  'Tip: ${_categories[_selectedCategory]['tip']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: _categories[_selectedCategory]
+                                            ['color'],
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           Expanded(
