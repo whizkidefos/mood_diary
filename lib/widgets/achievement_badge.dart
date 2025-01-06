@@ -20,7 +20,7 @@ class AchievementBadge extends StatelessWidget {
         decoration: BoxDecoration(
           color: achievement.isUnlocked
               ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceVariant,
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             if (achievement.isUnlocked)

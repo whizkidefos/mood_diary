@@ -199,7 +199,7 @@ class _ArtTherapyState extends State<ArtTherapy> {
             onPanUpdate: _onDragUpdate,
             child: CustomPaint(
               painter: DrawingPainter(points: points),
-              child: Container(
+              child: SizedBox(
                 height: MediaQuery.of(context).size.height,
                 width: MediaQuery.of(context).size.width,
               ),

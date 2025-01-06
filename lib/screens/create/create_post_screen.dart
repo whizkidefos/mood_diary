@@ -74,7 +74,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(

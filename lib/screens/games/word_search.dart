@@ -25,7 +25,7 @@ class _WordSearchState extends State<WordSearch> {
   late List<List<String>> _grid;
   late List<List<bool>> _selected;
   List<String> _foundWords = [];
-  int _gridSize = 10;
+  final int _gridSize = 10;
   Offset? _startDrag;
   Offset? _currentDrag;
   List<Offset> _selectedCells = [];
@@ -68,8 +68,9 @@ class _WordSearchState extends State<WordSearch> {
     if (direction == 0 && col + word.length > _gridSize) return false;
     if (direction == 1 && row + word.length > _gridSize) return false;
     if (direction == 2 &&
-        (row + word.length > _gridSize || col + word.length > _gridSize))
+        (row + word.length > _gridSize || col + word.length > _gridSize)) {
       return false;
+    }
 
     for (int i = 0; i < word.length; i++) {
       int currentRow = row + (direction == 1 || direction == 2 ? i : 0);
@@ -243,7 +244,7 @@ class _WordSearchState extends State<WordSearch> {
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.primaryContainer,
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.background,
+                        color: Theme.of(context).colorScheme.surface,
                         width: 0.5,
                       ),
                     ),

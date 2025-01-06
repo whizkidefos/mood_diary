@@ -55,7 +55,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
               end: Alignment.bottomRight,
               colors: [
                 Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surfaceVariant,
+                Theme.of(context).colorScheme.surfaceContainerHighest,
                 Theme.of(context).colorScheme.surface,
               ],
               stops: [

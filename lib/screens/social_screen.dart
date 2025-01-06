@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mood_diary/screens/story/create_story_screen.dart';
 import '../coordinators/social_coordinator.dart';
 import '../widgets/social/animated_gradient_box.dart';
 import '../widgets/social/story_avatar.dart';
 import '../widgets/social/social_card.dart';
 import '../widgets/social/loading_overlay.dart';
+import 'story/story_screen.dart'; // Add this line
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key});
@@ -35,6 +37,31 @@ class _SocialScreenState extends State<SocialScreen>
     }
   }
 
+  void _navigateToCreateStory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateStoryScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
+  void _navigateToStory(String userId, String userName) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => StoryScreen(
+          userId: userId,
+          userName: userName,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
   void _onScroll() {
     final showBackground = _scrollController.offset > 50;
     if (showBackground != _showAppBarBackground) {
@@ -54,20 +81,152 @@ class _SocialScreenState extends State<SocialScreen>
     return Scaffold(
       body: LoadingOverlay(
         isLoading: _isLoading,
-        child: NestedScrollView(
-          controller: _scrollController,
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            _buildAppBar(context, innerBoxIsScrolled),
+        child: Column(
+          children: [
+            // Banner and tabs section
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Social',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          CircleAvatar(
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            child: IconButton(
+                              icon:
+                                  const Icon(Icons.person, color: Colors.white),
+                              onPressed: _navigateToProfile,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Stories
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          StoryAvatar(
+                            name: 'Add Story',
+                            isAdd: true,
+                            size: 60,
+                            onTap: _navigateToCreateStory, // Update this
+                          ),
+                          ...List.generate(
+                            5,
+                            (index) => Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: StoryAvatar(
+                                name: 'User ${index + 1}',
+                                hasStory: index % 2 == 0,
+                                size: 60,
+                                onTap: () => _navigateToStory(
+                                  // Update this
+                                  'user$index',
+                                  'User ${index + 1}',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ...List.generate(
+                            5,
+                            (index) => Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: StoryAvatar(
+                                name: 'User ${index + 1}',
+                                hasStory: index % 2 == 0,
+                                size: 60,
+                                onTap: () {
+                                  // TODO: View story
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Tabs
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(28),
+                        ),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        tabs: const [
+                          Tab(text: 'Feed'),
+                          Tab(text: 'Events'),
+                          Tab(text: 'Chats'),
+                          Tab(text: 'Groups'),
+                        ],
+                        labelColor: Theme.of(context).colorScheme.primary,
+                        unselectedLabelColor:
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        splashBorderRadius: BorderRadius.circular(12),
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Tab content
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.surface,
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildFeedTab(),
+                    _buildEventsTab(),
+                    _buildChatsTab(),
+                    _buildGroupsTab(),
+                  ],
+                ),
+              ),
+            ),
           ],
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildFeedTab(),
-              _buildEventsTab(),
-              _buildChatsTab(),
-              _buildGroupsTab(),
-            ],
-          ),
         ),
       ),
       floatingActionButton: _buildFloatingActionButton(context),
@@ -113,12 +272,12 @@ class _SocialScreenState extends State<SocialScreen>
             ),
           ),
           child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Row(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -142,40 +301,40 @@ class _SocialScreenState extends State<SocialScreen>
                       ),
                     ],
                   ),
-                ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 24,
-                  ),
-                  child: Row(
-                    children: [
-                      StoryAvatar(
-                        name: 'Add Story',
-                        isAdd: true,
-                        onTap: () {
-                          // TODO: Create story
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      ...List.generate(
-                        5,
-                        (index) => Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: StoryAvatar(
-                            name: 'User ${index + 1}',
-                            hasStory: index % 2 == 0,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          StoryAvatar(
+                            name: 'Add Story',
+                            isAdd: true,
+                            size: 60,
                             onTap: () {
-                              // TODO: View story
+                              // TODO: Create story
                             },
                           ),
-                        ),
+                          const SizedBox(width: 16),
+                          ...List.generate(
+                            5,
+                            (index) => Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: StoryAvatar(
+                                name: 'User ${index + 1}',
+                                hasStory: index % 2 == 0,
+                                size: 60,
+                                onTap: () {
+                                  // TODO: View story
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -598,7 +757,7 @@ class _SocialScreenState extends State<SocialScreen>
               end: Alignment.bottomRight,
               colors: [
                 Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surfaceVariant,
+                Theme.of(context).colorScheme.surfaceContainerHighest,
                 Theme.of(context).colorScheme.surface,
               ],
             ),
