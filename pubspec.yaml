@@ -45,6 +45,11 @@ dependencies:
   firebase_messaging: ^15.1.6
   firebase_storage: ^12.3.7
   encrypt: ^5.0.3
+  workmanager: ^0.5.2
+  translator: ^1.0.3+1
+  speech_to_text: ^7.0.0
+  google_speech: ^5.3.0
+  intl: ^0.20.1
 
 dev_dependencies:
   flutter_test:
