@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/services/backup_service.dart'; // Adjust the import path as necessary
+import 'package:intl/intl.dart';
+import '../services/backup_service.dart';
 
 class BackupDialog extends StatefulWidget {
   final String chatId;
@@ -18,6 +19,8 @@ class _BackupDialogState extends State<BackupDialog> {
   List<String>? _backups;
   bool _isLoading = true;
   bool _isProcessing = false;
+  String? _error;
+  double _progress = 0.0;
 
   @override
   void initState() {
@@ -27,117 +30,148 @@ class _BackupDialogState extends State<BackupDialog> {
 
   Future<void> _loadBackups() async {
     try {
-      final backups = await _backupService.listBackups(widget.chatId);
       setState(() {
-        _backups = backups;
-        _isLoading = false;
+        _isLoading = true;
+        _error = null;
       });
+
+      final backups = await _backupService.listBackups(widget.chatId);
+      if (mounted) {
+        setState(() {
+          _backups = backups;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error loading backups')),
-        );
+        setState(() {
+          _error = 'Failed to load backups: $e';
+          _isLoading = false;
+        });
       }
     }
   }
 
   Future<void> _createBackup() async {
-    setState(() => _isProcessing = true);
     try {
+      setState(() {
+        _isProcessing = true;
+        _error = null;
+        _progress = 0.0;
+      });
+
       await _backupService.createBackup(widget.chatId);
       await _loadBackups();
-    } finally {
-      setState(() => _isProcessing = false);
-    }
-  }
 
-  Future<void> _restoreBackup(String backupUrl) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Restore Backup'),
-        content: const Text(
-          'This will replace all current messages. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isProcessing = true);
-    try {
-      await _backupService.restoreBackup(widget.chatId, backupUrl);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup restored successfully')),
+          const SnackBar(content: Text('Backup created successfully')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error restoring backup')),
-        );
+        setState(() {
+          _error = 'Failed to create backup: $e';
+        });
       }
     } finally {
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _progress = 0.0;
+        });
+      }
     }
   }
 
-  Future<void> _deleteBackup(String backupName) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Backup'),
-        content: const Text('Are you sure you want to delete this backup?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isProcessing = true);
+  Future<void> _restoreBackup(String backupPath) async {
     try {
-      await _backupService.deleteBackup(widget.chatId, backupName);
-      await _loadBackups();
+      setState(() {
+        _isProcessing = true;
+        _error = null;
+        _progress = 0.0;
+      });
+
+      await _backupService.restoreBackup(backupPath);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Backup restored successfully')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to restore backup: $e';
+        });
+      }
     } finally {
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _progress = 0.0;
+        });
+      }
     }
+  }
+
+  Future<void> _deleteBackup(String backupPath) async {
+    try {
+      setState(() {
+        _isProcessing = true;
+        _error = null;
+      });
+
+      await _backupService.deleteBackup(backupPath);
+      await _loadBackups();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Backup deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to delete backup: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  String _formatBackupName(String path) {
+    final filename = path.split('/').last;
+    final dateStr = filename.split('_')[1].split('.').first;
+    final date = DateTime.parse(
+        '${dateStr.substring(0, 8)} ${dateStr.substring(8)}');
+    return DateFormat('MMM d, y HH:mm').format(date);
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Backups',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -145,29 +179,95 @@ class _BackupDialogState extends State<BackupDialog> {
                 ),
               ],
             ),
-            const Divider(),
-            if (_isLoading || _isProcessing)
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            if (_isProcessing)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: LinearProgressIndicator(value: _progress),
+              ),
+            const SizedBox(height: 16),
+            if (_isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (_backups == null || _backups!.isEmpty)
-              const Center(child: Text('No backups found'))
+            else if (_backups?.isEmpty ?? true)
+              const Center(
+                child: Text('No backups available'),
+              )
             else
-              Expanded(
+              Flexible(
                 child: ListView.builder(
+                  shrinkWrap: true,
                   itemCount: _backups!.length,
                   itemBuilder: (context, index) {
                     final backup = _backups![index];
                     return ListTile(
-                      title: Text(backup),
+                      title: Text(_formatBackupName(backup)),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.restore),
-                            onPressed: () => _restoreBackup(backup),
+                            onPressed: _isProcessing
+                                ? null
+                                : () => showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Restore Backup'),
+                                        content: const Text(
+                                          'Are you sure you want to restore this backup? '
+                                          'This will replace all current messages.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('Cancel'),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                          TextButton(
+                                            child: const Text('Restore'),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              _restoreBackup(backup);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteBackup(backup),
+                            onPressed: _isProcessing
+                                ? null
+                                : () => showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Delete Backup'),
+                                        content: const Text(
+                                          'Are you sure you want to delete this backup? '
+                                          'This action cannot be undone.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('Cancel'),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                          TextButton(
+                                            child: const Text('Delete'),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              _deleteBackup(backup);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                           ),
                         ],
                       ),
@@ -176,13 +276,9 @@ class _BackupDialogState extends State<BackupDialog> {
                 ),
               ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _createBackup,
-                icon: const Icon(Icons.backup),
-                label: const Text('Create Backup'),
-              ),
+            ElevatedButton(
+              onPressed: _isProcessing ? null : _createBackup,
+              child: const Text('Create New Backup'),
             ),
           ],
         ),

@@ -152,22 +152,22 @@ class _CreatePollScreenState extends State<CreatePollScreen> {
                 labelText: 'Poll Duration',
                 border: OutlineInputBorder(),
               ),
-              items: [
+              items: const [
                 DropdownMenuItem(
-                  value: const Duration(hours: 24),
-                  child: const Text('1 day'),
+                  value: Duration(hours: 24),
+                  child: Text('1 day'),
                 ),
                 DropdownMenuItem(
-                  value: const Duration(days: 3),
-                  child: const Text('3 days'),
+                  value: Duration(days: 3),
+                  child: Text('3 days'),
                 ),
                 DropdownMenuItem(
-                  value: const Duration(days: 7),
-                  child: const Text('1 week'),
+                  value: Duration(days: 7),
+                  child: Text('1 week'),
                 ),
                 DropdownMenuItem(
-                  value: const Duration(days: 30),
-                  child: const Text('1 month'),
+                  value: Duration(days: 30),
+                  child: Text('1 month'),
                 ),
               ],
               onChanged: (value) {

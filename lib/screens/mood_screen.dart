@@ -413,8 +413,8 @@ class _MoodScreenState extends State<MoodScreen>
 
           return CustomScrollView(
             slivers: [
-              SliverAppBar.medium(
-                title: const Text('Mood Tracker'),
+              const SliverAppBar.medium(
+                title: Text('Mood Tracker'),
                 centerTitle: true,
               ),
               SliverToBoxAdapter(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 
 class ArtTherapy extends StatefulWidget {
   final Map<String, dynamic> activity;

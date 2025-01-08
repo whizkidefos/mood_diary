@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/chat_service.dart';
+import '../../widgets/chat/chat_bubble.dart';
+import '../../widgets/chat/chat_input.dart';
 import '../../widgets/chat/typing_indicator.dart';
-import '../../widgets/chat/online_status.dart';
-import '../../widgets/chat/media_preview.dart';
-import '../../widgets/chat/file_attachment.dart';
 
 class EnhancedChatScreen extends StatefulWidget {
-  final String userId;
-  final String userName;
+  final String chatId;
+  final String otherUserId;
 
   const EnhancedChatScreen({
     super.key,
-    required this.userId,
-    required this.userName,
+    required this.chatId,
+    required this.otherUserId,
   });
 
   @override
@@ -22,296 +21,200 @@ class EnhancedChatScreen extends StatefulWidget {
 }
 
 class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
-  final _messageController = TextEditingController();
-  final _scrollController = ScrollController();
   final _chatService = ChatService();
-  final _storage = FirebaseStorage.instance;
-  final _firestore = FirebaseFirestore.instance;
-  
-  List<MediaItem> _selectedMedia = [];
-  ChatMessage? _replyTo;
-  bool _isAttachmentVisible = false;
-  final bool _isRecording = false;
-  StreamSubscription? _typingSubscription;
-  StreamSubscription? _onlineStatusSubscription;
-  bool _isOtherUserTyping = false;
-  bool _isOtherUserOnline = false;
+  final _auth = FirebaseAuth.instance;
+  final _scrollController = ScrollController();
+  String? _replyToMessage;
+  String? _replyToMessageId;
 
   @override
   void initState() {
     super.initState();
-    _setupSubscriptions();
-    _loadMessages();
-  }
-
-  void _setupSubscriptions() {
-    _typingSubscription = _chatService
-        .getTypingStatus(widget.userId, 'currentUser')
-        .listen((isTyping) {
-      setState(() => _isOtherUserTyping = isTyping);
-    });
-
-    _onlineStatusSubscription = _chatService
-        .getOnlineStatus(widget.userId)
-        .listen((isOnline) {
-      setState(() => _isOtherUserOnline = isOnline);
-    });
+    _markMessagesAsRead();
   }
 
   @override
   void dispose() {
-    _messageController.dispose();
     _scrollController.dispose();
-    _typingSubscription?.cancel();
-    _onlineStatusSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    try {
-      final messages = await _firestore
-          .collection('chats')
-          .doc(widget.userId)
-          .collection('messages')
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      // Process messages
-    } catch (e) {
-      _showError('Error loading messages');
-    }
+  Future<void> _markMessagesAsRead() async {
+    await _chatService.markMessagesAsRead(widget.chatId);
   }
 
-  Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty && _selectedMedia.isEmpty) return;
-
-    try {
-      final message = {
-        'text': _messageController.text,
-        'senderId': 'currentUser',
-        'timestamp': FieldValue.serverTimestamp(),
-        'type': 'text',
-        'replyTo': _replyTo?.id,
-      };
-
-      if (_selectedMedia.isNotEmpty) {
-        final mediaUrls = await _uploadMedia();
-        message['mediaUrls'] = mediaUrls;
-        message['type'] = 'media';
-      }
-
-      await _firestore
-          .collection('chats')
-          .doc(widget.userId)
-          .collection('messages')
-          .add(message);
-
-      _messageController.clear();
-      setState(() {
-        _selectedMedia = [];
-        _replyTo = null;
-      });
-
-      _scrollToBottom();
-    } catch (e) {
-      _showError('Error sending message');
-    }
-  }
-
-  Future<List<String>> _uploadMedia() async {
-    final urls = <String>[];
-    for (final media in _selectedMedia) {
-      final ref = _storage.ref().child(
-        'chats/${widget.userId}/${DateTime.now().millisecondsSinceEpoch}_${media.path.split('/').last}',
-      );
-      final uploadTask = await ref.putFile(File(media.path));
-      final url = await uploadTask.ref.getDownloadURL();
-      urls.add(url);
-    }
-    return urls;
-  }
-
-  void _handleMediaPicked(List<MediaItem> media) {
-    setState(() {
-      _selectedMedia.addAll(media);
-      _isAttachmentVisible = false;
-    });
-  }
-
-  void _removeMedia(int index) {
-    setState(() {
-      _selectedMedia.removeAt(index);
-    });
-  }
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  void _handleSendMessage(String message) {
+    _chatService.sendMessage(
+      chatId: widget.chatId,
+      text: message,
+      replyToId: _replyToMessageId,
     );
+    _cancelReply();
+  }
+
+  void _handleSendMedia(List<String> mediaPaths) async {
+    try {
+      final urls = await _chatService.uploadMediaFiles(widget.chatId, mediaPaths);
+      await _chatService.sendMessage(
+        chatId: widget.chatId,
+        text: '📎 Media',
+        mediaUrls: urls,
+        replyToId: _replyToMessageId,
+      );
+      _cancelReply();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending media: $e')),
+      );
+    }
+  }
+
+  void _handleTypingStatus(bool isTyping) {
+    _chatService.updateTypingStatus(
+      widget.chatId,
+      _auth.currentUser!.uid,
+      isTyping,
+    );
+  }
+
+  void _handleReply(String message, String messageId) {
+    setState(() {
+      _replyToMessage = message;
+      _replyToMessageId = messageId;
+    });
+  }
+
+  void _cancelReply() {
+    setState(() {
+      _replyToMessage = null;
+      _replyToMessageId = null;
+    });
+  }
+
+  void _handleDelete(String messageId) async {
+    try {
+      await _chatService.deleteMessage(widget.chatId, messageId);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting message: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            Stack(
-              children: [
-                CircleAvatar(child: Text(widget.userName[0])),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: OnlineStatus(
-                    isOnline: _isOtherUserOnline,
-                    size: 12,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Column(
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(widget.otherUserId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Text('Loading...');
+            }
+
+            final userData = snapshot.data!.data() as Map<String, dynamic>?;
+            final username = userData?['username'] as String? ?? 'Unknown';
+
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.userName),
-                if (_isOtherUserTyping)
-                  const TypingIndicator()
-                else
-                  Text(
-                    _isOtherUserOnline ? 'online' : 'offline',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                Text(username),
+                StreamBuilder<bool>(
+                  stream:
+                      _chatService.getOnlineStatus(widget.otherUserId),
+                  builder: (context, snapshot) {
+                    final isOnline = snapshot.data ?? false;
+                    return Text(
+                      isOnline ? 'Online' : 'Offline',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withOpacity(0.7),
+                      ),
+                    );
+                  },
+                ),
               ],
-            ),
-          ],
+            );
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.videocam_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => VideoCallScreen(
-                    userId: widget.userId,
-                    userName: widget.userName,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => VoiceCallScreen(
-                    userId: widget.userId,
-                    userName: widget.userName,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatOptionsScreen(
-                    userId: widget.userId,
-                    userName: widget.userName,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
-          if (_replyTo != null)
-            ReplyMessage(
-              senderName: _replyTo!.senderId == 'currentUser'
-                  ? 'You'
-                  : widget.userName,
-              content: _replyTo!.content,
-              onDismiss: () => setState(() => _replyTo = null),
-            ),
-          if (_selectedMedia.isNotEmpty)
-            MediaPreview(
-              items: _selectedMedia,
-              onRemove: _removeMedia,
-            ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('chats')
-                  .doc(widget.userId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
+              stream: _chatService.getMessages(widget.chatId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Center(
-                    child: Text('Error loading messages'),
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
                   );
                 }
 
                 if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 final messages = snapshot.data!.docs;
+
                 return ListView.builder(
                   controller: _scrollController,
                   reverse: true,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(bottom: 16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
-                    final isMe = message['senderId'] == 'currentUser';
+                    final message =
+                        messages[index].data() as Map<String, dynamic>;
+                    final messageId = messages[index].id;
+                    final isMe =
+                        message['senderId'] == _auth.currentUser?.uid;
+                    final timestamp =
+                        (message['timestamp'] as Timestamp).toDate();
 
-                    return SwipeableMessage(
-                      onReply: () {
-                        setState(() {
-                          _replyTo = ChatMessage(
-                            id: messages[index].id,
-                            senderId: message['senderId'],
-                            content: message['text'],
-                            timestamp: (message['timestamp'] as Timestamp).toDate(),
-                          );
-                        });
-                      },
-                      child: MessageBubble(
-                        message: message,
-                        isMe: isMe,
-                        userName: widget.userName,
+                    return ChatBubble(
+                      message: message['text'],
+                      isMe: isMe,
+                      timestamp: timestamp,
+                      mediaUrls: List<String>.from(
+                          message['mediaUrls'] ?? []),
+                      replyToMessage: message['replyToMessage'],
+                      onReply: () => _handleReply(
+                        message['text'],
+                        messageId,
                       ),
+                      onDelete:
+                          isMe ? () => _handleDelete(messageId) : null,
                     );
                   },
                 );
               },
             ),
           ),
-          if (_isAttachmentVisible) _buildAttachmentOptions(),
-          _buildMessageInput(),
+          StreamBuilder<bool>(
+            stream: _chatService.getTypingStatus(
+              widget.chatId,
+              widget.otherUserId,
+            ),
+            builder: (context, snapshot) {
+              return TypingIndicator(
+                isTyping: snapshot.data ?? false,
+              );
+            },
+          ),
+          ChatInput(
+            onSendMessage: _handleSendMessage,
+            onSendMedia: _handleSendMedia,
+            onTypingStatusChanged: _handleTypingStatus,
+            replyToMessage: _replyToMessage,
+            onCancelReply: _cancelReply,
+          ),
         ],
       ),
     );
   }
+}

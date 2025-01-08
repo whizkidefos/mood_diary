@@ -4,7 +4,7 @@ import '../theme/theme_provider.dart';
 import 'mood_screen.dart';
 import 'tracking_screen.dart';
 import 'activities_screen.dart';
-import 'social_screen.dart';
+import 'social/social_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

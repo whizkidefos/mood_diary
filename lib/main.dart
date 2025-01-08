@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 import 'theme/theme_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/home_screen.dart';
-import 'firebase_options.dart'; // Add this line to import DefaultFirebaseOptions
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
   runApp(const MyApp());
 }
 
@@ -32,10 +34,7 @@ class MyApp extends StatelessWidget {
             ),
             darkTheme: ThemeData.dark().copyWith(
               primaryColor: Colors.indigo,
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.indigo,
-                brightness: Brightness.dark,
-              ),
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
             ),
             themeMode: themeProvider.themeMode,
             home: const HomeScreen(),
