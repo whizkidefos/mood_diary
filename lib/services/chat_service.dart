@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -38,11 +39,9 @@ class ChatService {
       if (!snapshot.exists) return false;
       final lastSeen = snapshot.get('lastSeen') as Timestamp?;
       if (lastSeen == null) return false;
-      
+
       // Consider user online if last seen within last 2 minutes
-      return DateTime.now()
-          .difference(lastSeen.toDate())
-          .inMinutes < 2;
+      return DateTime.now().difference(lastSeen.toDate()).inMinutes < 2;
     });
   }
 
@@ -94,7 +93,8 @@ class ChatService {
     }
   }
 
-  Future<List<String>> uploadMediaFiles(String chatId, List<String> filePaths) async {
+  Future<List<String>> uploadMediaFiles(
+      String chatId, List<String> filePaths) async {
     try {
       final urls = <String>[];
       for (final path in filePaths) {

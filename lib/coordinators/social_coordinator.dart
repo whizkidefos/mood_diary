@@ -74,7 +74,9 @@ class _CreateOptionsBottomSheet extends StatelessWidget {
               width: 32,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(
+                      alpha: 0.5,
+                    ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -168,7 +170,9 @@ class _CreateOptionTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.outline.withValues(
+                  alpha: 0.1,
+                ),
           ),
         ),
         child: Row(
@@ -201,7 +205,9 @@ class _CreateOptionTile extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.onSurface.withValues(
+                    alpha: 0.5,
+                  ),
             ),
           ],
         ),

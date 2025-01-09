@@ -214,7 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -259,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -283,8 +283,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(
-                    color:
-                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.2),
                   ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -365,11 +367,11 @@ class _MessageBubble extends StatelessWidget {
                         ? Theme.of(context)
                             .colorScheme
                             .onPrimary
-                            .withOpacity(0.7)
+                            .withValues(alpha: 0.7)
                         : Theme.of(context)
                             .colorScheme
                             .onSurfaceVariant
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                   ),
                 ),
                 if (isMe) ...[
@@ -380,7 +382,7 @@ class _MessageBubble extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onPrimary
-                        .withOpacity(0.7),
+                        .withValues(alpha: 0.7),
                   ),
                 ],
               ],

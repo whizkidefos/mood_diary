@@ -1,9 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 
@@ -27,7 +26,9 @@ class FirebaseService {
         password: password,
       );
     } catch (e) {
-      print('Error signing in: $e');
+      if (kDebugMode) {
+        print('Error signing in: $e');
+      }
       rethrow;
     }
   }
@@ -40,7 +41,9 @@ class FirebaseService {
         password: password,
       );
     } catch (e) {
-      print('Error creating user: $e');
+      if (kDebugMode) {
+        print('Error creating user: $e');
+      }
       rethrow;
     }
   }
@@ -49,7 +52,9 @@ class FirebaseService {
     try {
       await _auth.signOut();
     } catch (e) {
-      print('Error signing out: $e');
+      if (kDebugMode) {
+        print('Error signing out: $e');
+      }
       rethrow;
     }
   }
@@ -78,7 +83,9 @@ class FirebaseService {
             .update(additionalData);
       }
     } catch (e) {
-      print('Error updating profile: $e');
+      if (kDebugMode) {
+        print('Error updating profile: $e');
+      }
       rethrow;
     }
   }
@@ -93,7 +100,9 @@ class FirebaseService {
       await ref.putData(Uint8List.fromList(bytes));
       return await ref.getDownloadURL();
     } catch (e) {
-      print('Error uploading file: $e');
+      if (kDebugMode) {
+        print('Error uploading file: $e');
+      }
       rethrow;
     }
   }
@@ -103,7 +112,9 @@ class FirebaseService {
       final ref = _storage.ref().child(path);
       await ref.delete();
     } catch (e) {
-      print('Error deleting file: $e');
+      if (kDebugMode) {
+        print('Error deleting file: $e');
+      }
       rethrow;
     }
   }
@@ -114,7 +125,9 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).doc(document).set(data);
     } catch (e) {
-      print('Error setting data: $e');
+      if (kDebugMode) {
+        print('Error setting data: $e');
+      }
       rethrow;
     }
   }
@@ -124,7 +137,9 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).doc(document).update(data);
     } catch (e) {
-      print('Error updating data: $e');
+      if (kDebugMode) {
+        print('Error updating data: $e');
+      }
       rethrow;
     }
   }
@@ -133,7 +148,9 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).doc(document).delete();
     } catch (e) {
-      print('Error deleting document: $e');
+      if (kDebugMode) {
+        print('Error deleting document: $e');
+      }
       rethrow;
     }
   }
@@ -180,7 +197,9 @@ class FirebaseService {
         _showLocalNotification(message);
       });
     } catch (e) {
-      print('Error initializing notifications: $e');
+      if (kDebugMode) {
+        print('Error initializing notifications: $e');
+      }
       rethrow;
     }
   }
@@ -207,7 +226,9 @@ class FirebaseService {
         payload: message.data['route'],
       );
     } catch (e) {
-      print('Error showing notification: $e');
+      if (kDebugMode) {
+        print('Error showing notification: $e');
+      }
       rethrow;
     }
   }
@@ -222,7 +243,9 @@ class FirebaseService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error logging event: $e');
+      if (kDebugMode) {
+        print('Error logging event: $e');
+      }
       rethrow;
     }
   }
@@ -237,7 +260,9 @@ class FirebaseService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error logging error: $e');
+      if (kDebugMode) {
+        print('Error logging error: $e');
+      }
       rethrow;
     }
   }

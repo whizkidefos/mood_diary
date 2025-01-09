@@ -5,8 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   record_linux
-  screen_retriever
-  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
