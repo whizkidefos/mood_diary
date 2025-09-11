@@ -59,7 +59,7 @@ class _ChatInputState extends State<ChatInput> {
 
   Future<void> _pickImages() async {
     try {
-      final images = await _imagePicker.pickMultiImage();
+      final List<XFile> images = await _imagePicker.pickMultiImage();
       if (images.isNotEmpty) {
         widget.onSendMedia(images.map((image) => image.path).toList());
       }

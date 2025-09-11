@@ -108,7 +108,8 @@ class _StoryScreenState extends State<StoryScreen> {
                   final username = userData?['username'] as String? ?? 'Unknown';
                   final photoUrl = userData?['photoUrl'] as String?;
                   final hasUnseenStory = userStories.any((story) {
-                    final views = List<String>.from(story.get('views') as List? ?? []);
+                    final storyData = story.data() as Map<String, dynamic>?;
+                    final views = List<String>.from(storyData?['views'] as List? ?? []);
                     return !views.contains(_auth.currentUser?.uid);
                   });
 

@@ -17,6 +17,11 @@ class NotificationService {
       onDidReceiveNotificationResponse: _handleNotificationTap,
     );
 
+    // Request permission for iOS and macOS
+    await _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+    
     _isInitialized = true;
   }
 

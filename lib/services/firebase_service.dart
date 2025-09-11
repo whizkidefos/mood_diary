@@ -69,11 +69,12 @@ class FirebaseService {
       final user = _auth.currentUser;
       if (user == null) throw Exception('No user signed in');
 
-      if (displayName != null || photoURL != null) {
-        await user.updateProfile(
-          displayName: displayName ?? user.displayName,
-          photoURL: photoURL ?? user.photoURL,
-        );
+      if (displayName != null) {
+        await user.updateDisplayName(displayName);
+      }
+      
+      if (photoURL != null) {
+        await user.updatePhotoURL(photoURL);
       }
 
       if (additionalData != null) {

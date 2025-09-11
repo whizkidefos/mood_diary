@@ -149,7 +149,7 @@ class _StoryViewScreenState extends State<StoryViewScreen>
                         story['text'] as String? ?? '',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: story['fontSize'] as double? ?? 24,
+                          fontSize: story['textSize'] as double? ?? 24,
                         ),
                         textAlign: TextAlign.center,
                       ),

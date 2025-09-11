@@ -19,7 +19,6 @@ class VoiceMessagePlayer extends StatefulWidget {
 }
 
 class _VoiceMessagePlayerState extends State<VoiceMessagePlayer> {
-  late AudioPlayer _audioPlayer;
   final _player = AudioPlayer();
   bool _isPlaying = false;
   bool _isLoading = true;
@@ -31,7 +30,6 @@ class _VoiceMessagePlayerState extends State<VoiceMessagePlayer> {
   void initState() {
     super.initState();
     _initAudioPlayer();
-    _audioPlayer = AudioPlayer();
   }
 
   Future<void> _initAudioPlayer() async {

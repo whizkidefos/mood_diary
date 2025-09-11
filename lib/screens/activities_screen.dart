@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'games/memory_game.dart';
 import 'games/color_patterns.dart';
+import 'games/word_search.dart';
 import 'exercise_details.dart';
 import 'journal_entry.dart';
-import 'music_player.dart'; // Add this import statement
-import 'meditation_details.dart'; // Add this import statement
-import 'art_therapy.dart'; // Add this import statement
+import 'music_player.dart';
+import 'meditation_details.dart';
+import 'art_therapy.dart';
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
@@ -417,7 +418,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
         'title': 'Word Search',
         'description': 'Find hidden positive words',
         'icon': Icons.search,
-        'screen': null, // TODO: Implement Word Search game
+        'screen': const WordSearch(),
       },
     ];
 
